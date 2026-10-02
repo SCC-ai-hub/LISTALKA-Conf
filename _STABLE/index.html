@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="HandheldFriendly" content="true" />
+    <title>Участники конференции</title>
+    <link rel="stylesheet" href="Carousel/carousel.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0a1628;
+        color: #fff;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: manipulation;
+      }
+
+      ::-webkit-scrollbar {
+        display: none;
+      }
+
+      .f-carousel {
+        width: 100vw;
+        height: 100vh;
+        --f-carousel-spacing: 0px;
+        --f-carousel-slide-width: 100%;
+        --f-carousel-slide-height: 100%;
+        --f-button-width: 48px;
+        --f-button-height: 48px;
+        --f-button-svg-width: 20px;
+        --f-button-svg-height: 20px;
+        --f-button-svg-stroke-width: 2.5;
+        --f-button-color: #475569;
+        --f-button-hover-color: #334155;
+        --f-button-border-radius: 50%;
+        --f-button-shadow: 0 6px 12px -2px rgb(50 50 93 / 25%),
+          0 3px 7px -3px rgb(0 0 0 / 30%);
+        --f-button-bg: #fff;
+        --f-button-hover-bg: #f9f9f9;
+        --f-button-active-bg: #f0f0f0;
+        --f-button-prev-pos: 18px;
+        --f-button-next-pos: 18px;
+      }
+
+      .f-carousel__nav .f-button.is-prev,
+      .f-carousel__nav .f-button.is-next {
+        background: #fff !important;
+        color: #475569 !important;
+        border-radius: 50%;
+        box-shadow: 0 6px 12px -2px rgb(50 50 93 / 25%),
+          0 3px 7px -3px rgb(0 0 0 / 30%);
+      }
+
+      .f-carousel__slide {
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
+      }
+
+      .slide {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: #0a1628 url("background.jpg") center / cover no-repeat;
+        overflow: hidden;
+      }
+
+      /* Область списка — под заголовком на background.jpg */
+      .participants {
+        position: absolute;
+        left: 5.2%;
+        right: 5%;
+        top: 28%;
+        bottom: 12%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: clamp(12px, 2vh, 24px);
+      }
+
+      .person {
+        display: grid;
+        grid-template-columns: 30% 30% 40%;
+        align-items: start;
+        column-gap: 1%;
+        font-size: clamp(14px, 1.5vw, 28px);
+        line-height: 1.25;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+      }
+
+      .person__name,
+      .person__company,
+      .person__role {
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .person__company {
+        padding-right: 2%;
+        text-transform: none;
+      }
+
+      .page-number {
+        position: absolute;
+        left: 5.2%;
+        bottom: 2.6%;
+        font-size: clamp(48px, 5vw, 92px);
+        font-weight: 300;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body oncontextmenu="return false;">
+    <div class="f-carousel" id="myCarousel"></div>
+
+    <script src="participants.js"></script>
+    <script src="Carousel/carousel.umd.js"></script>
+    <script>
+      (function () {
+        var ROWS_PER_PAGE = 10;
+
+        function disableClick(event) {
+          if (event.button === 2) {
+            return false;
+          }
+        }
+
+        document.onmousedown = disableClick;
+        document.addEventListener("selectstart", function (e) {
+          e.preventDefault();
+        });
+        document.addEventListener("dragstart", function (e) {
+          e.preventDefault();
+        });
+
+        function escapeHtml(text) {
+          return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        // Компания латиницей в начале должности: "ALEAN COLLECTION, Должность"
+        var INLINE_COMPANY = /^([A-Z][A-Z0-9]*(?:[ &\.'.-][A-Z0-9]+)*)\,\s*(.+)$/;
+
+        function parseParticipants(raw) {
+          var lines = String(raw || "")
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .split("\n");
+          var currentCompany = "";
+          var result = [];
+
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+
+            var bullet = line.match(/^[•\-\*]\s*(.+)$/);
+            if (bullet) {
+              var body = bullet[1];
+              var parts = body.split(/\s+[—–\-]\s+/);
+              var name = (parts[0] || "").trim();
+              var role = parts.slice(1).join(" — ").trim();
+              var company = currentCompany;
+
+              var inline = role.match(INLINE_COMPANY);
+              if (inline) {
+                company = inline[1].trim();
+                role = inline[2].trim();
+              }
+
+              if (name) {
+                result.push({
+                  name: name,
+                  company: company,
+                  role: role,
+                });
+              }
+              continue;
+            }
+
+            currentCompany = line;
+          }
+
+          return result;
+        }
+
+        function chunk(arr, size) {
+          var pages = [];
+          for (var i = 0; i < arr.length; i += size) {
+            pages.push(arr.slice(i, i + size));
+          }
+          return pages.length ? pages : [[]];
+        }
+
+        function padPage(n) {
+          return n < 10 ? "0" + n : String(n);
+        }
+
+        function renderSlide(people, pageIndex) {
+          var rows = people
+            .map(function (p) {
+              return (
+                '<div class="person">' +
+                '<div class="person__name">' +
+                escapeHtml(p.name) +
+                "</div>" +
+                '<div class="person__company">' +
+                escapeHtml(p.company) +
+                "</div>" +
+                '<div class="person__role">' +
+                escapeHtml(p.role) +
+                "</div>" +
+                "</div>"
+              );
+            })
+            .join("");
+
+          return (
+            '<div class="f-carousel__slide">' +
+            '<div class="slide">' +
+            '<div class="participants">' +
+            rows +
+            "</div>" +
+            '<div class="page-number">' +
+            padPage(pageIndex + 1) +
+            "</div>" +
+            "</div>" +
+            "</div>"
+          );
+        }
+
+        var people = parseParticipants(window.PARTICIPANTS_TEXT);
+        var pages = chunk(people, ROWS_PER_PAGE);
+        var carouselEl = document.getElementById("myCarousel");
+
+        carouselEl.innerHTML = pages
+          .map(function (page, idx) {
+            return renderSlide(page, idx);
+          })
+          .join("");
+
+        new Carousel(carouselEl, {
+          infinite: true,
+          fill: true,
+          dragFree: false,
+          adaptiveHeight: false,
+          center: true,
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1 @@
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --start-fullscreen --app "C:\_WORK\OGIR_Listalka-konf_2026\index.html" --incognito --kiosk --simulate-outdated-no-au="01 Jan 2199" --disable-pinch
